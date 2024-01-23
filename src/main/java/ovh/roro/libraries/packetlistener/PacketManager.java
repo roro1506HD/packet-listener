@@ -2,7 +2,9 @@ package ovh.roro.libraries.packetlistener;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketFlow;
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,14 +45,14 @@ public class PacketManager implements Listener {
         }
     }
 
-    public <T extends Packet> @Nullable PacketEvent<T> handlePacket(@NotNull T packet, @NotNull CraftPlayer player) {
+    public <T extends Packet> @Nullable PacketEvent<T> handlePacket(@NotNull T packet, @NotNull CraftPlayer player, @NotNull ConnectionProtocol.CodecData<?> codecData) {
         Set<PacketHandler> handlers = this.handlers.get(packet.getClass());
 
         if (handlers == null) {
             return null;
         }
 
-        PacketEvent<T> event = new PacketEvent<>(packet, player);
+        PacketEvent<T> event = new PacketEvent<>(packet, player, codecData);
 
         for (PacketHandler handler : handlers) {
             try {
