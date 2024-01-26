@@ -5,7 +5,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import net.minecraft.network.protocol.PacketFlow;
+import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("rawtypes")
@@ -21,7 +22,7 @@ class ChannelListener extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
-        PacketEvent<Packet> event = this.packetManager.handlePacket((Packet) msg, this.player, ctx.channel().attr(Connection.ATTRIBUTE_SERVERBOUND_PROTOCOL).get());
+        PacketEvent<Packet> event = this.packetManager.handlePacket((Packet) msg, this.player, ctx.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get(), PacketFlow.SERVERBOUND);
 
         if (event == null) {
             super.channelRead(ctx, msg);
@@ -36,7 +37,7 @@ class ChannelListener extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        PacketEvent<Packet> event = this.packetManager.handlePacket((Packet) msg, this.player, ctx.channel().attr(Connection.ATTRIBUTE_CLIENTBOUND_PROTOCOL).get());
+        PacketEvent<Packet> event = this.packetManager.handlePacket((Packet) msg, this.player, ctx.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get(), PacketFlow.CLIENTBOUND);
 
         if (event == null) {
             super.write(ctx, msg, promise);

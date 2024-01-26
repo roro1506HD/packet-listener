@@ -2,7 +2,8 @@ package ovh.roro.libraries.packetlistener;
 
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.protocol.Packet;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import net.minecraft.network.protocol.PacketFlow;
+import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -15,16 +16,18 @@ public class PacketEvent<T extends Packet> {
     private final @NotNull T packet;
     private final @NotNull CraftPlayer player;
     private final @NotNull List<Packet<?>> additionalPackets;
-    private final @NotNull ConnectionProtocol.CodecData<?> codecData;
+    private final @NotNull ConnectionProtocol protocol;
+    private final @NotNull PacketFlow flow;
 
     private @NotNull Packet<?> packetToProcess;
     private boolean cancelled;
 
-    PacketEvent(@NotNull T packet, @NotNull CraftPlayer player, @NotNull ConnectionProtocol.CodecData<?> codecData) {
+    PacketEvent(@NotNull T packet, @NotNull CraftPlayer player, @NotNull ConnectionProtocol protocol, @NotNull PacketFlow flow) {
         this.packet = packet;
         this.player = player;
         this.additionalPackets = new ArrayList<>();
-        this.codecData = codecData;
+        this.protocol = protocol;
+        this.flow = flow;
 
         this.packetToProcess = packet;
     }
@@ -42,7 +45,7 @@ public class PacketEvent<T extends Packet> {
     }
 
     public void packet(@NotNull Packet<?> packet) {
-        if (!this.codecData.isValidPacketType(packet)) {
+        if (this.protocol.getPacketId(this.flow, packet) == -1) {
             throw new IllegalArgumentException("Cannot set packet: provided packet is not on the same flow and the same state");
         }
 
