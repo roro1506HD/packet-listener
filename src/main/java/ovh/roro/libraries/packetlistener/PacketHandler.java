@@ -1,11 +1,11 @@
 package ovh.roro.libraries.packetlistener;
 
-import net.minecraft.network.protocol.Packet;
+import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("rawtypes")
 @FunctionalInterface
-public interface PacketHandler<T extends Packet> {
+public interface PacketHandler<T extends PacketWrapper> {
 
     void handle(@NotNull PacketEvent<T> event);
 

@@ -1,7 +1,7 @@
 package ovh.roro.libraries.packetlistener;
 
-import net.minecraft.network.protocol.Packet;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
+import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -9,16 +9,16 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
-public class PacketEvent<T extends Packet> {
+public class PacketEvent<T extends PacketWrapper> {
 
     private final @NotNull T packet;
-    private final @NotNull CraftPlayer player;
-    private final @NotNull List<Packet<?>> additionalPackets;
+    private final @NotNull Player player;
+    private final @NotNull List<PacketWrapper<?>> additionalPackets;
 
-    private @NotNull Packet<?> packetToProcess;
+    private @NotNull PacketWrapper<?> packetToProcess;
     private boolean cancelled;
 
-    PacketEvent(@NotNull T packet, @NotNull CraftPlayer player) {
+    PacketEvent(@NotNull T packet, @NotNull Player player) {
         this.packet = packet;
         this.player = player;
         this.additionalPackets = new ArrayList<>();
@@ -38,27 +38,23 @@ public class PacketEvent<T extends Packet> {
         return this.packet;
     }
 
-    public void packet(@NotNull Packet<?> packet) {
-        if (packet.type().flow() != this.packet.type().flow()) {
-            throw new IllegalArgumentException("Cannot set packet: provided packet is not on the same flow and the same state");
-        }
-
+    public void packet(@NotNull PacketWrapper<?> packet) {
         this.packetToProcess = Objects.requireNonNull(packet);
     }
 
-    public void addPacket(@NotNull Packet<?> packet) {
+    public void addPacket(@NotNull PacketWrapper<?> packet) {
         this.additionalPackets.add(Objects.requireNonNull(packet));
     }
 
-    public @NotNull CraftPlayer player() {
+    public @NotNull Player player() {
         return this.player;
     }
 
-    @NotNull Packet<?> packetToProcess() {
+    @NotNull PacketWrapper<?> packetToProcess() {
         return this.packetToProcess;
     }
 
-    @NotNull List<Packet<?>> additionalPackets() {
+    @NotNull List<PacketWrapper<?>> additionalPackets() {
         return this.additionalPackets;
     }
 }
