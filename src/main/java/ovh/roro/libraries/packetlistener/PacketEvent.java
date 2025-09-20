@@ -17,6 +17,7 @@ public class PacketEvent<T extends PacketWrapper> {
 
     private @NotNull PacketWrapper<?> packetToProcess;
     private boolean cancelled;
+    private boolean dirty;
 
     PacketEvent(@NotNull T packet, @NotNull Player player) {
         this.packet = packet;
@@ -32,6 +33,18 @@ public class PacketEvent<T extends PacketWrapper> {
 
     public void cancelled(boolean cancelled) {
         this.cancelled = cancelled;
+    }
+
+    public boolean dirty() {
+        return this.dirty;
+    }
+
+    public void dirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    public void markDirty() {
+        this.dirty = true;
     }
 
     public @NotNull T packet() {

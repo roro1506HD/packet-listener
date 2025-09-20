@@ -1,7 +1,10 @@
 package ovh.roro.libraries.packetlistener;
 
+import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.PacketEventsAPI;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import com.github.retrooper.packetevents.event.PacketReceiveEvent;
+import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.event.ProtocolPacketEvent;
 import com.github.retrooper.packetevents.settings.PacketEventsSettings;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 @SuppressWarnings("rawtypes")
 public class PacketManager {
@@ -39,6 +43,8 @@ public class PacketManager {
                         .fullStackTrace(true)
         );
 
+        PacketEvents.setAPI(this.api);
+
         this.api.init();
         this.api.getEventManager().registerListener(new PacketEventsListener(this), PacketListenerPriority.NORMAL);
 
@@ -49,17 +55,25 @@ public class PacketManager {
         this.api.terminate();
     }
 
-    public <T extends PacketWrapper<T>> void addHandler(@NotNull Class<T> packetClass, @NotNull PacketWrapperFactory<T> factory, @NotNull PacketHandler<T> handler) {
+    public <T extends PacketWrapper<T>> void addSendHandler(@NotNull Class<T> packetClass, @NotNull Function<PacketSendEvent, T> factory, @NotNull PacketHandler<T> handler) {
+        this.addHandler(packetClass, new PacketHandlerHolder<>(handler, factory, null));
+    }
+
+    public <T extends PacketWrapper<T>> void addReceiveHandler(@NotNull Class<T> packetClass, @NotNull Function<PacketReceiveEvent, T> factory, @NotNull PacketHandler<T> handler) {
+        this.addHandler(packetClass, new PacketHandlerHolder<>(handler, null, factory));
+    }
+
+    private <T extends PacketWrapper<T>> void addHandler(@NotNull Class<T> packetClass, @NotNull PacketHandlerHolder<T> holder) {
         Set<PacketHandlerHolder> handlers = this.handlers.computeIfAbsent(packetClass, unused -> new ObjectOpenHashSet<>());
 
-        for (PacketHandlerHolder holder : handlers) {
-            if (holder.handler().equals(handler)) {
+        for (PacketHandlerHolder handler : handlers) {
+            if (handler.handler().equals(holder.handler())) {
                 // Prevent duplicate handlers
                 return;
             }
         }
 
-        handlers.add(new PacketHandlerHolder<>(handler, factory));
+        handlers.add(holder);
     }
 
     public <T extends PacketWrapper<T>> void removeHandler(@NotNull Class<T> packetClass, @NotNull PacketHandler<T> handler) {
@@ -74,7 +88,11 @@ public class PacketManager {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends PacketWrapper> @Nullable PacketEvent<T> handlePacket(@NotNull ProtocolPacketEvent event, @NotNull Player player) {
+    <T extends PacketWrapper<T>, U extends ProtocolPacketEvent> @Nullable PacketEvent<T> handlePacket(
+            @NotNull U event,
+            @NotNull Function<PacketHandlerHolder<T>, Function<U, T>> factoryMapper,
+            @NotNull Player player
+    ) {
         Set<PacketHandlerHolder> handlers = this.handlers.get(event.getPacketType().getWrapperClass());
 
         if (handlers == null) {
@@ -84,7 +102,7 @@ public class PacketManager {
         PacketEvent<T> packetEvent = null;
         for (PacketHandlerHolder holder : handlers) {
             if (packetEvent == null) {
-                packetEvent = new PacketEvent<>((T) holder.factory().create(event, true), player);
+                packetEvent = new PacketEvent<>(factoryMapper.apply((PacketHandlerHolder<T>) holder).apply(event), player);
             }
 
             try {
