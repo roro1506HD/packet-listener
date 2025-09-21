@@ -1,6 +1,7 @@
 package ovh.roro.libraries.packetlistener;
 
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBundle;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,6 +58,17 @@ public class PacketEvent<T extends PacketWrapper> {
 
     public void addPacket(@NotNull PacketWrapper<?> packet) {
         this.additionalPackets.add(Objects.requireNonNull(packet));
+    }
+
+    public void addBundle(@NotNull PacketWrapper<?>... packets) {
+        List<PacketWrapper<?>> newAdditionalPackets = new ArrayList<>();
+        newAdditionalPackets.add(new WrapperPlayServerBundle());
+        for (PacketWrapper<?> wrapper : packets) {
+            newAdditionalPackets.add(Objects.requireNonNull(wrapper));
+        }
+        newAdditionalPackets.add(new WrapperPlayServerBundle());
+        this.additionalPackets.addAll(newAdditionalPackets);
+        newAdditionalPackets.clear();
     }
 
     public @NotNull Player player() {

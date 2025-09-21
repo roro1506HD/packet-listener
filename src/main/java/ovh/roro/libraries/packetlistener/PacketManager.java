@@ -45,6 +45,7 @@ public class PacketManager {
 
         PacketEvents.setAPI(this.api);
 
+        System.setProperty("packetevents.mappings.preload", "true");
         this.api.init();
         this.api.getEventManager().registerListener(new PacketEventsListener(this), PacketListenerPriority.NORMAL);
 

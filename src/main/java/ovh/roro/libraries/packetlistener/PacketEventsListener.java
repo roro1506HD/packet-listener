@@ -1,9 +1,11 @@
 package ovh.roro.libraries.packetlistener;
 
+import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.event.ProtocolPacketEvent;
+import com.github.retrooper.packetevents.netty.channel.ChannelHelper;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,15 +37,17 @@ class PacketEventsListener implements PacketListener {
 
         if (packetEvent != null) {
             if (packetEvent.cancelled()) {
+                packetEvent.packet().setBuffer(event.getByteBuf());
+                event.markForReEncode(packetEvent.dirty());
+            } else {
                 event.setCancelled(true);
-                return;
             }
 
-            packetEvent.packet().setBuffer(event.getByteBuf());
-            event.markForReEncode(packetEvent.dirty());
             for (PacketWrapper<?> packet : packetEvent.additionalPackets()) {
-                event.getUser().sendPacketSilently(packet);
+                event.getUser().writePacketSilently(packet);
             }
+
+            ChannelHelper.flushInContext(event.getChannel(), PacketEvents.ENCODER_NAME);
         }
     }
 }
