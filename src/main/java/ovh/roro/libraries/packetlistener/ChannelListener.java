@@ -24,8 +24,10 @@ class ChannelListener extends ChannelDuplexHandler {
 
         if (event == null) {
             super.channelRead(ctx, msg);
-        } else if (!event.cancelled()) {
-            super.channelRead(ctx, event.packetToProcess());
+        } else {
+            if (!event.cancelled()) {
+                super.channelRead(ctx, event.packetToProcess());
+            }
 
             for (Packet<?> packet : event.additionalPackets()) {
                 super.channelRead(ctx, packet);
@@ -39,8 +41,10 @@ class ChannelListener extends ChannelDuplexHandler {
 
         if (event == null) {
             super.write(ctx, msg, promise);
-        } else if (!event.cancelled()) {
-            super.write(ctx, event.packetToProcess(), promise);
+        } else {
+            if (!event.cancelled()) {
+                super.write(ctx, event.packetToProcess(), promise);
+            }
 
             for (Packet<?> packet : event.additionalPackets()) {
                 super.write(ctx, packet, ctx.newPromise());
